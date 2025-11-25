@@ -37,35 +37,35 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-[#0B0F14] flex items-center justify-center p-4" data-testid="auth-page">
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#00E5FF]/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#9B7BFF]/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-red-400/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-red-600/10 rounded-full blur-3xl"></div>
       </div>
 
       <div className="relative w-full max-w-md">
         <div className="bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10 shadow-2xl">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-[#00E5FF] via-[#9B7BFF] to-[#FF4DD2] bg-clip-text text-transparent mb-2">
+            <h1 className="text-4xl font-bold text-red-600 neon mb-2">
               NebulaStream
             </h1>
-            <p className="text-[#96A0AA]">{isLogin ? 'Welcome back' : 'Create your account'}</p>
+            <p className="text-red-400">{isLogin ? 'Welcome back' : 'Create your account'}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6" data-testid="auth-form">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-[#E6EEF3]">Email</Label>
+              <Label htmlFor="email" className="text-red-600">Email</Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="bg-white/5 border-white/10 text-[#E6EEF3] focus:border-[#00E5FF]"
+                className="bg-white/5 border-red-800/10 text-red-600 focus:border-red-600"
                 data-testid="email-input"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-[#E6EEF3]">Password</Label>
+              <Label htmlFor="password" className="text-red-600">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -73,7 +73,7 @@ const Auth = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="bg-white/5 border-white/10 text-[#E6EEF3] focus:border-[#00E5FF]"
+                className="bg-white/5 border-red-800/10 text-red-600 focus:border-red-600"
                 data-testid="password-input"
               />
             </div>
@@ -91,7 +91,7 @@ const Auth = () => {
           <div className="mt-6 text-center">
             <button
               onClick={() => setIsLogin(!isLogin)}
-              className="text-[#00E5FF] hover:text-[#9B7BFF] transition-colors"
+              className="text-red-600 hover:text-red-400 transition-colors"
               data-testid="toggle-auth-mode"
             >
               {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}

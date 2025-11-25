@@ -15,9 +15,10 @@
 
 /* Glass morphism effect */
 .glass {
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: hsla(var(--background) / 0.6);
+  backdrop-filter: blur(18px) saturate(120%);
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 4px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
 }
 
 /* Smooth transitions for interactive elements */
@@ -31,16 +32,38 @@ button:active {
 
 /* Custom focus ring */
 *:focus-visible {
-  outline: 2px solid #00E5FF;
+  outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;
 }
 
-/* Gradient text */
+/* Gradient text removed: use solid red text instead */
 .gradient-text {
-  background: linear-gradient(135deg, #00E5FF 0%, #9B7BFF 50%, #FF4DD2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--foreground);
+  background: none !important;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: unset;
+}
+
+/* Force buttons to use red theme by default (can be overridden by component classes) */
+button, .btn, .button {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  border-color: transparent !important;
+  box-shadow: 0 8px 30px rgba(220,36,38,0.12), 0 2px 6px rgba(0,0,0,0.6);
+  border-radius: 12px;
+  padding: 0.65rem 1.1rem;
+  text-transform: none;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: hsl(var(--primary));
+  border: 1px solid hsl(var(--border));
+}
+
+/* Neon headings */
+.neon {
+  text-shadow: 0 2px 8px rgba(220,36,38,0.14), 0 0 24px rgba(220,36,38,0.06);
 }
 
 /* Animations */

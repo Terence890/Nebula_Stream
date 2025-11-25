@@ -11,11 +11,11 @@ from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
 
-from auth_service import verify_password, get_password_hash, create_access_token, decode_token
-from tmdb_service import tmdb_service
-
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
+
+from auth_service import verify_password, get_password_hash, create_access_token, decode_token
+from tmdb_service import tmdb_service
 
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
@@ -105,30 +105,40 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 # Auth routes
 @api_router.post("/auth/register", response_model=Token)
 async def register(user_data: UserCreate):
-    existing = await db.users.find_one({"email": user_data.email}, {"_id": 0})
-    if existing:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    
-    user = User(
-        email=user_data.email,
-        hashed_password=get_password_hash(user_data.password)
-    )
-    
-    doc = user.model_dump()
-    doc['created_at'] = doc['created_at'].isoformat()
-    await db.users.insert_one(doc)
-    
-    token = create_access_token({"user_id": user.id})
-    return Token(access_token=token)
+    try:
+        existing = await db.users.find_one({"email": user_data.email}, {"_id": 0})
+        if existing:
+            raise HTTPException(status_code=400, detail="Email already registered")
+
+        user = User(
+            email=user_data.email,
+            hashed_password=get_password_hash(user_data.password)
+        )
+
+        doc = user.model_dump()
+        doc['created_at'] = doc['created_at'].isoformat()
+        await db.users.insert_one(doc)
+
+        token = create_access_token({"user_id": user.id})
+        return Token(access_token=token)
+    except Exception as e:
+        logger.exception("Error in register endpoint")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @api_router.post("/auth/login", response_model=Token)
 async def login(credentials: UserLogin):
-    user = await db.users.find_one({"email": credentials.email}, {"_id": 0})
-    if not user or not verify_password(credentials.password, user["hashed_password"]):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    token = create_access_token({"user_id": user["id"]})
-    return Token(access_token=token)
+    try:
+        user = await db.users.find_one({"email": credentials.email}, {"_id": 0})
+        if not user or not verify_password(credentials.password, user["hashed_password"]):
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+
+        token = create_access_token({"user_id": user["id"]})
+        return Token(access_token=token)
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Error in login endpoint")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @api_router.get("/auth/me")
 async def get_me(current_user: User = Depends(get_current_user)):
@@ -248,7 +258,9 @@ app.include_router(api_router)
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    # Normalize CORS origins from env: allow values like "*" or comma-separated origins,
+    # and strip surrounding quotes or whitespace so forwarded env values work correctly.
+    allow_origins=[o.strip().strip('"').strip("'") for o in os.environ.get('CORS_ORIGINS', '*').split(',') if o.strip()],
     allow_methods=["*"],
     allow_headers=["*"],
 )

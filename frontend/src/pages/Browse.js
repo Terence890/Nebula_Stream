@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
@@ -24,6 +24,11 @@ const Browse = () => {
   const [titleDetails, setTitleDetails] = useState(null);
   const [showPlayer, setShowPlayer] = useState(false);
   const [videoUrl, setVideoUrl] = useState('');
+  const [externalVideoUrl, setExternalVideoUrl] = useState('');
+  const [isYouTubePlayer, setIsYouTubePlayer] = useState(false);
+  const [youtubeVideoId, setYoutubeVideoId] = useState('');
+  const playerRef = useRef(null);
+  const ytPlayerRef = useRef(null);
   const [heroTitle, setHeroTitle] = useState(null);
 
   useEffect(() => {
@@ -74,13 +79,35 @@ const Browse = () => {
   };
 
   const handlePlay = (title) => {
-    const trailers = titleDetails?.videos?.results?.filter(v => v.type === 'Trailer') || [];
-    if (trailers.length > 0) {
-      const youtubeKey = trailers[0].key;
-      setVideoUrl(`https://www.youtube.com/embed/${youtubeKey}?autoplay=1`);
-      setShowPlayer(true);
+    // Find trailers (prefer 'Trailer', fallback to 'Teaser')
+    const videos = titleDetails?.videos?.results || [];
+    const trailers = videos.filter(v => v.type === 'Trailer');
+    const teasers = videos.filter(v => v.type === 'Teaser');
+    const candidate = (trailers.length ? trailers[0] : teasers.length ? teasers[0] : null);
+
+    if (candidate) {
+      // Prepare both embed and external watch URLs (YouTube)
+      const key = candidate.key;
+      if (candidate.site === 'YouTube' || candidate.site === 'youtube') {
+        // Use YouTube IFrame API for better error handling (detect embedding blocked errors)
+        setYoutubeVideoId(key);
+        setIsYouTubePlayer(true);
+        setExternalVideoUrl(`https://www.youtube.com/watch?v=${key}`);
+        // clear iframe-based URL (we'll mount the player)
+        setVideoUrl('');
+      } else {
+        // For non-YouTube providers use iframe/embed if available, otherwise open external link
+        setIsYouTubePlayer(false);
+        setVideoUrl(candidate.url || '');
+        setExternalVideoUrl(candidate.url || '');
+      }
+      // Close the details dialog before showing the player so the player can occupy the screen
+      setSelectedTitle(null);
+      setTitleDetails(null);
+      // small tick to ensure dialog state updates, then show player
+      setTimeout(() => setShowPlayer(true), 0);
     } else {
-      toast.info('No trailer available for this title');
+      toast.info('No trailer available for this title. TMDb provides trailers/metadata but not full movie streams.');
     }
   };
 
@@ -98,6 +125,85 @@ const Browse = () => {
     }
   };
 
+  const closePlayer = () => {
+    setShowPlayer(false);
+    setVideoUrl('');
+    setExternalVideoUrl('');
+    setIsYouTubePlayer(false);
+    setYoutubeVideoId('');
+    if (ytPlayerRef.current && ytPlayerRef.current.destroy) {
+      try { ytPlayerRef.current.destroy(); } catch (e) { /* ignore */ }
+      ytPlayerRef.current = null;
+    }
+  };
+
+  // Initialize or destroy YouTube IFrame player when needed
+  useEffect(() => {
+    const loadYouTubeApi = () => {
+      return new Promise((resolve) => {
+        if (window.YT && window.YT.Player) return resolve(window.YT);
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        // YouTube API will call this global when ready
+        window.onYouTubeIframeAPIReady = () => {
+          resolve(window.YT);
+        };
+      });
+    };
+
+    const mountPlayer = async () => {
+      if (!isYouTubePlayer || !youtubeVideoId || !showPlayer) return;
+      try {
+        const YT = await loadYouTubeApi();
+        // Destroy existing player if any
+        if (ytPlayerRef.current && ytPlayerRef.current.destroy) {
+          try { ytPlayerRef.current.destroy(); } catch (e) { /* ignore */ }
+          ytPlayerRef.current = null;
+        }
+
+        ytPlayerRef.current = new YT.Player(playerRef.current, {
+          height: '100%',
+          width: '100%',
+          videoId: youtubeVideoId,
+          playerVars: { autoplay: 1, controls: 1, rel: 0 },
+          events: {
+            onReady: (event) => {
+              try { event.target.playVideo && event.target.playVideo(); } catch (e) { /* ignore */ }
+            },
+            onError: (e) => {
+              // e.data contains the error code: 2,5,100,101,150 etc.
+              const code = e.data;
+              if (code === 101 || code === 150) {
+                toast.error('This video cannot be embedded. Opening on YouTube.');
+                // offer external link and keep player UI; user can click "Watch on YouTube"
+                setExternalVideoUrl(`https://www.youtube.com/watch?v=${youtubeVideoId}`);
+              } else {
+                toast.error('Playback error (YouTube). Opening on YouTube.');
+                setExternalVideoUrl(`https://www.youtube.com/watch?v=${youtubeVideoId}`);
+              }
+            }
+          }
+        });
+      } catch (err) {
+        console.error('YT player init failed', err);
+        setExternalVideoUrl(`https://www.youtube.com/watch?v=${youtubeVideoId}`);
+      }
+    };
+
+    if (showPlayer && isYouTubePlayer && youtubeVideoId) mountPlayer();
+
+    return () => {
+      // cleanup on unmount or when deps change
+      if (ytPlayerRef.current && ytPlayerRef.current.destroy) {
+        try { ytPlayerRef.current.destroy(); } catch (e) { /* ignore */ }
+        ytPlayerRef.current = null;
+      }
+    };
+  }, [showPlayer, isYouTubePlayer, youtubeVideoId]);
+
   const renderHero = () => {
     if (!heroTitle) return null;
     const backdropUrl = heroTitle.backdrop_path
@@ -106,24 +212,23 @@ const Browse = () => {
 
     return (
       <div className="relative h-[70vh] w-full" data-testid="hero-section">
-        <div className="absolute inset-0">
+          <div className="absolute inset-0">
           <img src={backdropUrl} alt={heroTitle.title || heroTitle.name} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0B0F14] via-[#0B0F14]/60 to-transparent"></div>
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0B0F14] via-transparent to-transparent"></div>
+          <div className="absolute inset-0 bg-[#0B0F14]/60"></div>
         </div>
 
         <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-end pb-20">
           <div className="max-w-2xl space-y-6">
-            <h1 className="text-5xl md:text-7xl font-bold text-[#E6EEF3]" data-testid="hero-title">
+            <h1 className="text-5xl md:text-7xl font-bold text-red-600 neon" data-testid="hero-title">
               {heroTitle.title || heroTitle.name}
             </h1>
-            <p className="text-lg text-[#96A0AA] line-clamp-3">
+            <p className="text-lg text-red-400 line-clamp-3">
               {heroTitle.overview}
             </p>
             <div className="flex items-center space-x-4">
               <Button
                 onClick={() => handleTitleClick(heroTitle)}
-                className="bg-gradient-to-r from-[#00E5FF] to-[#9B7BFF] hover:opacity-90 text-white font-semibold px-8 py-6 rounded-xl"
+                className="bg-red-600 hover:bg-red-700 text-white font-semibold px-8 py-6 rounded-xl"
                 data-testid="hero-play-btn"
               >
                 <Play className="mr-2" /> Play Trailer
@@ -131,7 +236,7 @@ const Browse = () => {
               <Button
                 onClick={() => handleTitleClick(heroTitle)}
                 variant="outline"
-                className="border-white/20 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white px-8 py-6 rounded-xl"
+                className="border-red-600 bg-transparent backdrop-blur-sm hover:bg-red-700/10 text-red-600 px-8 py-6 rounded-xl"
                 data-testid="hero-info-btn"
               >
                 <Info className="mr-2" /> More Info
@@ -148,7 +253,7 @@ const Browse = () => {
 
     return (
       <div className="mb-12" data-testid={testId}>
-        <h2 className="text-2xl font-bold text-[#E6EEF3] mb-6 px-4 sm:px-6 lg:px-8">{title}</h2>
+        <h2 className="text-2xl font-bold text-red-600 mb-6 px-4 sm:px-6 lg:px-8">{title}</h2>
         <div className="overflow-x-auto scrollbar-hide px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-4 pb-4">
             {items.slice(0, 20).map((item) => (
@@ -182,8 +287,17 @@ const Browse = () => {
       </div>
 
       {/* Title Details Dialog */}
-      <Dialog open={!!selectedTitle} onOpenChange={() => { setSelectedTitle(null); setTitleDetails(null); }}>
-        <DialogContent className="bg-[#1a1f2e] border-white/10 text-[#E6EEF3] max-w-4xl max-h-[90vh] overflow-y-auto" data-testid="title-details-dialog">
+      <Dialog
+        open={!!selectedTitle}
+        onOpenChange={(isOpen) => {
+          // Only clear selection when the dialog is being closed
+          if (!isOpen) {
+            setSelectedTitle(null);
+            setTitleDetails(null);
+          }
+        }}
+      >
+        <DialogContent className="backdrop-blur-md bg-black/40 border border-white/5 text-red-600 max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl p-6" data-testid="title-details-dialog">
           {titleDetails && (
             <div className="space-y-6">
               <div className="relative h-64 rounded-xl overflow-hidden">
@@ -192,22 +306,22 @@ const Browse = () => {
                   alt={titleDetails.title || titleDetails.name}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#1a1f2e] to-transparent"></div>
+                <div className="absolute inset-0 bg-[#1a1f2e]/60"></div>
               </div>
 
               <div className="space-y-4">
                 <h2 className="text-4xl font-bold" data-testid="dialog-title">{titleDetails.title || titleDetails.name}</h2>
                 
-                <div className="flex items-center space-x-4 text-sm text-[#96A0AA]">
+                <div className="flex items-center space-x-4 text-sm text-red-400">
                   <span>{titleDetails.release_date?.split('-')[0] || titleDetails.first_air_date?.split('-')[0]}</span>
                   <span className="flex items-center space-x-1">
-                    <Star className="w-4 h-4 text-[#00E5FF] fill-[#00E5FF]" />
+                    <Star className="w-4 h-4 text-red-500 fill-red-500" />
                     <span>{titleDetails.vote_average?.toFixed(1)}</span>
                   </span>
                   {titleDetails.runtime && <span>{titleDetails.runtime} min</span>}
                 </div>
 
-                <p className="text-[#E6EEF3] leading-relaxed">{titleDetails.overview}</p>
+                <p className="text-red-600 leading-relaxed">{titleDetails.overview}</p>
 
                 {titleDetails.genres && (
                   <div className="flex flex-wrap gap-2">
@@ -222,7 +336,7 @@ const Browse = () => {
                 <div className="flex space-x-3 pt-4">
                   <Button
                     onClick={() => handlePlay(selectedTitle)}
-                    className="bg-gradient-to-r from-[#00E5FF] to-[#9B7BFF] hover:opacity-90 text-white font-semibold"
+                    className="bg-red-600 hover:bg-red-700 text-white font-semibold"
                     data-testid="dialog-play-btn"
                   >
                     <Play className="mr-2 w-5 h-5" /> Play Trailer
@@ -230,7 +344,7 @@ const Browse = () => {
                   <Button
                     onClick={handleAddToWatchlist}
                     variant="outline"
-                    className="border-white/20 bg-white/10 hover:bg-white/20 text-white"
+                    className="border-red-600 bg-transparent hover:bg-red-700/10 text-red-600"
                     data-testid="dialog-add-watchlist-btn"
                   >
                     <Plus className="mr-2 w-5 h-5" /> Add to Watchlist
@@ -246,7 +360,7 @@ const Browse = () => {
       {showPlayer && (
         <div className="fixed inset-0 z-50 bg-black" data-testid="video-player-container">
           <button
-            onClick={() => { setShowPlayer(false); setVideoUrl(''); }}
+            onClick={closePlayer}
             className="absolute top-4 right-4 z-10 bg-black/50 backdrop-blur-sm hover:bg-black/70 text-white rounded-full p-3 transition-colors"
             data-testid="close-video-btn"
           >
@@ -254,13 +368,36 @@ const Browse = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-          <iframe
-            src={videoUrl}
-            className="w-full h-full"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            data-testid="video-iframe"
-          ></iframe>
+
+          {/* Top control bar: explain that TMDb provides trailers, and offer external YouTube link as fallback */}
+          <div className="absolute left-1/2 transform -translate-x-1/2 top-6 z-20 flex items-center space-x-3 bg-black/50 px-3 py-1 rounded-md">
+            {externalVideoUrl && (
+              <a
+                href={externalVideoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={closePlayer}
+                className="inline-flex items-center px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm"
+                data-testid="watch-on-youtube-btn"
+              >
+                Watch on YouTube
+              </a>
+            )}
+          </div>
+
+          {/* If this is a YouTube player we mount the IFrame API into the player container, otherwise use a regular iframe */}
+          {isYouTubePlayer ? (
+            <div ref={playerRef} className="w-full h-full" data-testid="youtube-player" />
+          ) : (
+            <iframe
+              src={videoUrl}
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              data-testid="video-iframe"
+              title="Trailer"
+            ></iframe>
+          )}
         </div>
       )}
     </div>

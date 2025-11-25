@@ -3,16 +3,17 @@
 @tailwind utilities;
 
 :root {
-  --background: #0B0F14;
-  --foreground: #E6EEF3;
-  --primary: #00E5FF;
-  --primary-foreground: #0B0F14;
-  --secondary: #9B7BFF;
-  --accent: #FF4DD2;
-  --muted: #96A0AA;
-  --border: rgba(255, 255, 255, 0.1);
-  --input: rgba(255, 255, 255, 0.05);
-  --ring: #00E5FF;
+  /* Use HSL tokens (tailwind config uses hsl(var(--...))) */
+  --background: 220 8% 4%;    /* very dark bluish black */
+  --foreground: 220 12% 92%;  /* near-white for readable text */
+  --primary: 0 82% 52%;       /* vivid red */
+  --primary-foreground: 220 16% 98%;
+  --secondary: 350 78% 40%;   /* deep red */
+  --accent: 345 85% 58%;
+  --muted: 0 0% 60%;
+  --border: 220 10% 10%;
+  --input: 220 8% 10%;
+  --ring: 0 82% 52%;
 }
 
 @layer base {
@@ -20,7 +21,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-[#0B0F14] text-foreground;
+    @apply bg-background text-foreground;
   }
 }
 

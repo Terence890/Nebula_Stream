@@ -1,0 +1,84 @@
+INFO:     Started server process [24741]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+2025-11-25 07:25:55,610 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/usr/local/python/3.12.1/lib/python3.12/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+INFO:     127.0.0.1:35082 - "POST /api/auth/register HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35086 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     103.92.103.46:0 - "GET / HTTP/1.1" 404 Not Found
+INFO:     103.92.103.46:0 - "OPTIONS //api/auth/register HTTP/1.1" 200 OK
+INFO:     103.92.103.46:0 - "POST //api/auth/register HTTP/1.1" 404 Not Found
+INFO:     103.92.103.46:0 - "POST //api/auth/register HTTP/1.1" 404 Not Found
+INFO:     103.92.103.46:0 - "OPTIONS //api/auth/login HTTP/1.1" 200 OK
+INFO:     103.92.103.46:0 - "POST //api/auth/login HTTP/1.1" 404 Not Found
+INFO:     103.92.103.46:0 - "POST //api/auth/login HTTP/1.1" 404 Not Found
+INFO:     103.92.103.46:0 - "POST //api/auth/login HTTP/1.1" 404 Not Found
+INFO:     103.92.103.46:0 - "OPTIONS //api/auth/login HTTP/1.1" 200 OK
+INFO:     103.92.103.46:0 - "POST //api/auth/login HTTP/1.1" 404 Not Found
+INFO:     103.92.103.46:0 - "GET / HTTP/1.1" 404 Not Found
+INFO:     4.240.18.228:0 - "POST /api/auth/register HTTP/1.1" 200 OK
+2025-11-25 07:35:31,544 - server - ERROR - Error in register endpoint
+Traceback (most recent call last):
+  File "/workspaces/Nebula_Stream/backend/server.py", line 111, in register
+    raise HTTPException(status_code=400, detail="Email already registered")
+fastapi.exceptions.HTTPException: 400: Email already registered
+INFO:     4.240.18.228:0 - "POST /api/auth/register HTTP/1.1" 500 Internal Server Error
+INFO:     103.92.103.46:0 - "POST //api/auth/login HTTP/1.1" 404 Not Found
+INFO:     103.92.103.46:0 - "POST //api/auth/login HTTP/1.1" 404 Not Found
+INFO:     103.92.103.46:0 - "POST //api/auth/login HTTP/1.1" 404 Not Found
+INFO:     103.92.103.46:0 - "POST //api/auth/login HTTP/1.1" 404 Not Found
+INFO:     103.92.103.46:0 - "POST //api/auth/login HTTP/1.1" 404 Not Found
+INFO:     103.92.103.46:0 - "POST //api/auth/login HTTP/1.1" 404 Not Found
+INFO:     103.92.103.46:0 - "POST //api/auth/login HTTP/1.1" 404 Not Found
+INFO:     103.92.103.46:0 - "POST //api/auth/login HTTP/1.1" 404 Not Found
+INFO:     103.92.103.46:0 - "OPTIONS //api/auth/register HTTP/1.1" 200 OK
+INFO:     103.92.103.46:0 - "POST //api/auth/register HTTP/1.1" 404 Not Found
+INFO:     103.92.103.46:0 - "POST //api/auth/register HTTP/1.1" 404 Not Found
+INFO:     103.92.103.46:0 - "POST //api/auth/register HTTP/1.1" 404 Not Found
+INFO:     103.92.103.46:0 - "POST //api/auth/register HTTP/1.1" 404 Not Found
+INFO:     4.240.18.228:0 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     103.92.103.46:0 - "POST //api/auth/login HTTP/1.1" 404 Not Found
+INFO:     103.92.103.46:0 - "OPTIONS /api/auth/login HTTP/1.1" 200 OK
+INFO:     103.92.103.46:0 - "POST /api/auth/login HTTP/1.1" 401 Unauthorized
+INFO:     103.92.103.46:0 - "POST /api/auth/login HTTP/1.1" 401 Unauthorized
+INFO:     103.92.103.46:0 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     103.92.103.46:0 - "OPTIONS /api/auth/me HTTP/1.1" 200 OK
+INFO:     103.92.103.46:0 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     103.92.103.46:0 - "OPTIONS /api/profiles HTTP/1.1" 200 OK
+INFO:     103.92.103.46:0 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     103.92.103.46:0 - "GET /api/profiles HTTP/1.1" 200 OK
+INFO:     103.92.103.46:0 - "GET /api/profiles HTTP/1.1" 200 OK
+INFO:     103.92.103.46:0 - "OPTIONS /api/profiles HTTP/1.1" 200 OK
+INFO:     103.92.103.46:0 - "POST /api/profiles HTTP/1.1" 200 OK
+INFO:     103.92.103.46:0 - "OPTIONS /api/titles/trending HTTP/1.1" 200 OK
+INFO:     103.92.103.46:0 - "OPTIONS /api/titles/popular?media_type=movie HTTP/1.1" 200 OK
+INFO:     103.92.103.46:0 - "OPTIONS /api/titles/popular?media_type=tv HTTP/1.1" 200 OK
+INFO:     103.92.103.46:0 - "OPTIONS /api/titles/trending HTTP/1.1" 200 OK
+INFO:     103.92.103.46:0 - "OPTIONS /api/titles/popular?media_type=movie HTTP/1.1" 200 OK
+INFO:     103.92.103.46:0 - "OPTIONS /api/titles/popular?media_type=tv HTTP/1.1" 200 OK
+2025-11-25 07:43:19,971 - httpx - INFO - HTTP Request: GET https://api.themoviedb.org/3/trending/all/week?api_key=a7d207c61b3111b46b29af30833bb5ea "HTTP/1.1 200 OK"
+INFO:     103.92.103.46:0 - "GET /api/titles/trending HTTP/1.1" 200 OK
+2025-11-25 07:43:19,981 - httpx - INFO - HTTP Request: GET https://api.themoviedb.org/3/movie/popular?page=1&api_key=a7d207c61b3111b46b29af30833bb5ea "HTTP/1.1 200 OK"
+2025-11-25 07:43:19,982 - httpx - INFO - HTTP Request: GET https://api.themoviedb.org/3/tv/popular?page=1&api_key=a7d207c61b3111b46b29af30833bb5ea "HTTP/1.1 200 OK"
+INFO:     103.92.103.46:0 - "GET /api/titles/popular?media_type=tv HTTP/1.1" 200 OK
+INFO:     103.92.103.46:0 - "GET /api/titles/popular?media_type=movie HTTP/1.1" 200 OK
+2025-11-25 07:43:20,381 - httpx - INFO - HTTP Request: GET https://api.themoviedb.org/3/trending/all/week?api_key=a7d207c61b3111b46b29af30833bb5ea "HTTP/1.1 200 OK"
+INFO:     103.92.103.46:0 - "GET /api/titles/trending HTTP/1.1" 200 OK
+2025-11-25 07:43:20,437 - httpx - INFO - HTTP Request: GET https://api.themoviedb.org/3/tv/popular?page=1&api_key=a7d207c61b3111b46b29af30833bb5ea "HTTP/1.1 200 OK"
+INFO:     103.92.103.46:0 - "GET /api/titles/popular?media_type=tv HTTP/1.1" 200 OK
+2025-11-25 07:43:20,440 - httpx - INFO - HTTP Request: GET https://api.themoviedb.org/3/movie/popular?page=1&api_key=a7d207c61b3111b46b29af30833bb5ea "HTTP/1.1 200 OK"
+INFO:     103.92.103.46:0 - "GET /api/titles/popular?media_type=movie HTTP/1.1" 200 OK
+INFO:     103.92.103.46:0 - "OPTIONS /api/titles/movie/1363123 HTTP/1.1" 200 OK
+2025-11-25 07:43:33,171 - httpx - INFO - HTTP Request: GET https://api.themoviedb.org/3/movie/1363123?append_to_response=videos%2Ccredits&api_key=a7d207c61b3111b46b29af30833bb5ea "HTTP/1.1 200 OK"
+INFO:     103.92.103.46:0 - "GET /api/titles/movie/1363123 HTTP/1.1" 200 OK
+INFO:     103.92.103.46:0 - "OPTIONS /api/titles/search?query=dexter HTTP/1.1" 200 OK
+2025-11-25 07:43:54,612 - httpx - INFO - HTTP Request: GET https://api.themoviedb.org/3/search/multi?query=dexter&page=1&api_key=a7d207c61b3111b46b29af30833bb5ea "HTTP/1.1 200 OK"
+INFO:     103.92.103.46:0 - "GET /api/titles/search?query=dexter HTTP/1.1" 200 OK
+INFO:     103.92.103.46:0 - "OPTIONS /api/titles/tv/1405 HTTP/1.1" 200 OK
+2025-11-25 07:43:59,499 - httpx - INFO - HTTP Request: GET https://api.themoviedb.org/3/tv/1405?append_to_response=videos%2Ccredits&api_key=a7d207c61b3111b46b29af30833bb5ea "HTTP/1.1 200 OK"
+INFO:     103.92.103.46:0 - "GET /api/titles/tv/1405 HTTP/1.1" 200 OK
