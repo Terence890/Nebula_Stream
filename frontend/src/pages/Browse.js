@@ -30,6 +30,7 @@ const Browse = () => {
   const playerRef = useRef(null);
   const ytPlayerRef = useRef(null);
   const [heroTitle, setHeroTitle] = useState(null);
+  const [heroIndex, setHeroIndex] = useState(0);
 
   useEffect(() => {
     if (!selectedProfile) {
@@ -47,15 +48,34 @@ const Browse = () => {
         axios.get(`${API}/titles/popular?media_type=tv`)
       ]);
 
-      setTrending(trendingRes.data?.results || []);
+      const trendingList = trendingRes.data?.results || [];
+      setTrending(trendingList);
       setPopularMovies(moviesRes.data?.results || []);
       setPopularTV(tvRes.data?.results || []);
-      setHeroTitle(trendingRes.data?.results?.[0]);
+      // initialize hero to first trending item
+      setHeroIndex(0);
+      setHeroTitle(trendingList[0] || null);
     } catch (error) {
       console.error('Failed to fetch titles', error);
       toast.error('Failed to load content');
     }
   };
+
+  // Rotate hero every 20 seconds through the trending list
+  useEffect(() => {
+    if (!trending || trending.length <= 1) return undefined;
+    // ensure heroIndex in bounds
+    setHeroIndex((i) => (i >= trending.length ? 0 : i));
+    const id = setInterval(() => {
+      setHeroIndex((i) => {
+        const next = (i + 1) % trending.length;
+        setHeroTitle(trending[next]);
+        return next;
+      });
+    }, 20000); // 20 seconds
+
+    return () => clearInterval(id);
+  }, [trending]);
 
   const handleSearch = async (query) => {
     try {
