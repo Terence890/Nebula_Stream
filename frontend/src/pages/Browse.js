@@ -42,10 +42,10 @@ const Browse = () => {
         axios.get(`${API}/titles/popular?media_type=tv`)
       ]);
 
-      setTrending(trendingRes.data.results || []);
-      setPopularMovies(moviesRes.data.results || []);
-      setPopularTV(tvRes.data.results || []);
-      setHeroTitle(trendingRes.data.results?.[0]);
+      setTrending(trendingRes.data?.results || []);
+      setPopularMovies(moviesRes.data?.results || []);
+      setPopularTV(tvRes.data?.results || []);
+      setHeroTitle(trendingRes.data?.results?.[0]);
     } catch (error) {
       console.error('Failed to fetch titles', error);
       toast.error('Failed to load content');
