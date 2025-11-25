@@ -10,7 +10,8 @@ import { Play, Plus, Info, Star } from 'lucide-react';
 import { useProfile } from '../contexts/ProfileContext';
 import { toast } from 'sonner';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const BACKEND = process.env.REACT_APP_BACKEND_URL ? process.env.REACT_APP_BACKEND_URL.replace(/\/+$/,'') : '';
+const API = `${BACKEND}/api`;
 const IMAGE_BASE = 'https://image.tmdb.org/t/p';
 
 const Browse = () => {
