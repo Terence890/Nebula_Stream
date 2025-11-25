@@ -55,7 +55,7 @@ const Browse = () => {
   const handleSearch = async (query) => {
     try {
       const response = await axios.get(`${API}/titles/search?query=${query}`);
-      setSearchResults(response.data.results || []);
+      setSearchResults(response.data?.results || []);
     } catch (error) {
       console.error('Search failed', error);
       toast.error('Search failed');
