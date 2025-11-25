@@ -81,7 +81,7 @@ const Auth = () => {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-[#00E5FF] to-[#9B7BFF] hover:opacity-90 text-white font-semibold py-6 rounded-xl transition-opacity"
+              className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-6 rounded-xl transition-colors"
               data-testid="submit-btn"
             >
               {loading ? 'Processing...' : isLogin ? 'Sign In' : 'Sign Up'}
