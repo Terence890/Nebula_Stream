@@ -6,6 +6,7 @@ import { Toaster } from 'sonner';
 import Auth from './pages/Auth';
 import Profiles from './pages/Profiles';
 import Browse from './pages/Browse';
+import ListPage from './pages/ListPage';
 import './App.css';
 
 const ProtectedRoute = ({ children }) => {
@@ -43,6 +44,14 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <Browse />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/list/:category"
+          element={
+            <ProtectedRoute>
+              <ListPage />
             </ProtectedRoute>
           }
         />

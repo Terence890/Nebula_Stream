@@ -3,7 +3,7 @@ import { Play, Plus, Info } from 'lucide-react';
 
 const IMAGE_BASE = 'https://image.tmdb.org/t/p';
 
-const TitleCard = ({ title, onClick }) => {
+const TitleCard = ({ title, onClick, onPlay }) => {
   const imageUrl = title.poster_path
     ? `${IMAGE_BASE}/w500${title.poster_path}`
     : title.backdrop_path
@@ -24,7 +24,7 @@ const TitleCard = ({ title, onClick }) => {
         <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <div className="absolute bottom-0 left-0 right-0 p-4 space-y-2">
-            <h3 className="text-red-600 font-semibold text-lg line-clamp-1">{name}</h3>
+            <h3 className="text-red-600 font-semibold text-sm sm:text-lg line-clamp-1">{name}</h3>
             <div className="flex items-center space-x-3 text-sm text-red-400">
               <span>{year}</span>
               <span className="flex items-center space-x-1">
@@ -32,11 +32,16 @@ const TitleCard = ({ title, onClick }) => {
               </span>
             </div>
             <div className="flex space-x-2 pt-2">
-              <button className="flex-1 bg-red-600 hover:bg-red-700 text-white rounded-lg px-3 py-2 flex items-center justify-center space-x-2 transition-colors" data-testid={`play-btn-${title.id}`}>
+              <button
+                onClick={(e) => { e.stopPropagation(); onPlay ? onPlay(title) : onClick && onClick(); }}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white rounded-lg px-2 sm:px-3 py-2 flex items-center justify-center space-x-2 transition-colors"
+                data-testid={`play-btn-${title.id}`}
+                aria-label={`Play ${name}`}
+              >
                 <Play className="w-4 h-4" />
-                <span className="text-sm">Play</span>
+                <span className="text-xs sm:text-sm">Play</span>
               </button>
-              <button className="bg-red-600 hover:bg-red-700 text-white rounded-lg px-3 py-2 transition-colors" data-testid={`add-btn-${title.id}`}>
+              <button className="bg-red-600 hover:bg-red-700 text-white rounded-lg px-2 sm:px-3 py-2 transition-colors" data-testid={`add-btn-${title.id}`} aria-label={`Add ${name}`}>
                 <Plus className="w-4 h-4" />
               </button>
             </div>

@@ -101,7 +101,8 @@ const Browse = () => {
 
   const handlePlay = (title) => {
     // Find trailers (prefer 'Trailer', fallback to 'Teaser')
-    const videos = titleDetails?.videos?.results || [];
+    const details = titleDetails;
+    const videos = details?.videos?.results || [];
     const trailers = videos.filter(v => v.type === 'Trailer');
     const teasers = videos.filter(v => v.type === 'Teaser');
     const candidate = (trailers.length ? trailers[0] : teasers.length ? teasers[0] : null);
@@ -129,6 +130,44 @@ const Browse = () => {
       setTimeout(() => setShowPlayer(true), 0);
     } else {
       toast.info('No trailer available for this title. TMDb provides trailers/metadata but not full movie streams.');
+    }
+  };
+
+  // Helper to fetch details then play immediately (used when Play is clicked on a card)
+  const playTitle = async (title) => {
+    const mediaType = title.media_type || (title.title ? 'movie' : 'tv');
+    try {
+      const response = await axios.get(`${API}/titles/${mediaType}/${title.id}`);
+      const details = response.data;
+      setTitleDetails(details);
+      // call handlePlay using fetched details
+      const videos = details?.videos?.results || [];
+      const trailers = videos.filter(v => v.type === 'Trailer');
+      const teasers = videos.filter(v => v.type === 'Teaser');
+      const candidate = (trailers.length ? trailers[0] : teasers.length ? teasers[0] : null);
+
+      if (candidate) {
+        const key = candidate.key;
+        if (candidate.site === 'YouTube' || candidate.site === 'youtube') {
+          setYoutubeVideoId(key);
+          setIsYouTubePlayer(true);
+          setExternalVideoUrl(`https://www.youtube.com/watch?v=${key}`);
+          setVideoUrl('');
+        } else {
+          setIsYouTubePlayer(false);
+          setVideoUrl(candidate.url || '');
+          setExternalVideoUrl(candidate.url || '');
+        }
+
+        // ensure any open dialogs close and show player
+        setSelectedTitle(null);
+        setTimeout(() => setShowPlayer(true), 0);
+      } else {
+        toast.info('No trailer available for this title.');
+      }
+    } catch (err) {
+      console.error('Failed to fetch details for play', err);
+      toast.error('Failed to play trailer');
     }
   };
 
@@ -232,7 +271,7 @@ const Browse = () => {
       : 'https://via.placeholder.com/1920x1080/0B0F14/00E5FF?text=NebulaStream';
 
     return (
-      <div className="relative h-[70vh] w-full" data-testid="hero-section">
+      <div className="relative h-[calc(100vh-4rem)] w-full" data-testid="hero-section">
           <div className="absolute inset-0">
           <img src={backdropUrl} alt={heroTitle.title || heroTitle.name} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-[#0B0F14]/60"></div>
@@ -274,12 +313,30 @@ const Browse = () => {
 
     return (
       <div className="mb-12" data-testid={testId}>
-        <h2 className="text-2xl font-bold text-red-600 mb-6 px-4 sm:px-6 lg:px-8">{title}</h2>
+        <div className="flex items-center justify-between mb-6 px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-bold text-red-600">{title}</h2>
+          <div>
+            <button
+              onClick={() => {
+                const map = {
+                  'Trending Now': 'trending',
+                  'Popular Movies': 'movie',
+                  'Popular TV Shows': 'tv'
+                };
+                const cat = map[title] || 'trending';
+                navigate(`/list/${cat}`);
+              }}
+              className="text-red-400 hover:text-red-200 text-sm"
+            >
+              View All
+            </button>
+          </div>
+        </div>
         <div className="overflow-x-auto scrollbar-hide px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-4 pb-4">
             {items.slice(0, 20).map((item) => (
-              <div key={item.id} className="flex-none w-48">
-                <TitleCard title={item} onClick={() => handleTitleClick(item)} />
+              <div key={item.id} className="flex-none w-36 sm:w-44 md:w-48 lg:w-56">
+                <TitleCard title={item} onClick={() => handleTitleClick(item)} onPlay={() => playTitle(item)} />
               </div>
             ))}
           </div>
